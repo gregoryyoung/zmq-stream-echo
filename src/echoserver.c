@@ -27,12 +27,16 @@
 
 /*
 @header
-    echoserver - 
+    echoserver - simple echo server using ZMQ_STREAM for raw sockets
 @discuss
+    A sample app exploring how to use raw sockets with libzmq. As the name
+    suggests it will simply echo back what you send it and close the socket.
+    //TODO add usage
 @end
 */
 
-#include "ec_classes.h"
+#include "czmq.h"
+
 
 int main (int argc, char *argv [])
 {
@@ -58,5 +62,11 @@ int main (int argc, char *argv [])
     //  Insert main code here
     if (verbose)
         zsys_info ("echoserver - ");
+    zctx_t *ctx = zctx_new();
+    void *sock = zsocket_new(ctx, ZMQ_STREAM);
+    void *socket = zmq_socket (ctx, ZMQ_STREAM);
+    assert (socket);
+    int bound = zmq_bind (socket, "tcp://*:1111");
+    assert (bound == 0);
     return 0;
 }
