@@ -1,0 +1,25 @@
+Name(7)
+=======
+
+
+NAME
+----
+stream_echo - Project
+
+
+SYNOPSIS
+--------
+----
+#include <stream-echo.h>
+
+cc ['flags'] 'files' -lec ['libraries']
+----
+
+
+DESCRIPTION
+-----------
+
+Classes
+~~~~~~~
+
+Something.

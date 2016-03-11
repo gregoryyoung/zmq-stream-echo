@@ -1,0 +1,11 @@
+<project
+    name = "stream-echo"
+    script = "zproject.gsl"
+    prefix = "ec"
+    header = "stream-echo.h">
+    <version major = "0" minor = "1" patch = "0"/>
+    <include filename = "license.xml" />
+    <use project = "libzmq" />
+    <use project = "czmq" />
+    <main name = "echoserver"/>
+</project>
