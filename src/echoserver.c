@@ -59,14 +59,30 @@ int main (int argc, char *argv [])
             return 1;
         }
     }
-    //  Insert main code here
     if (verbose)
         zsys_info ("echoserver - ");
-    zctx_t *ctx = zctx_new();
-    void *sock = zsocket_new(ctx, ZMQ_STREAM);
+    void *ctx = zctx_new();
     void *socket = zmq_socket (ctx, ZMQ_STREAM);
     assert (socket);
     int bound = zmq_bind (socket, "tcp://*:1111");
     assert (bound == 0);
+    uint8_t id [256];
+    size_t id_size = 256;
+    uint8_t data [1024];
+    size_t data_size = 1024;
+    size_t received;
+    while(3) {
+        id_size = zmq_recv (socket, id, id_size, 0);
+        assert (id_size > 0);
+        do {
+            received = zmq_recv (socket, data, data_size, 0);
+            assert (received >= 0);
+            zmq_send (socket, id, id_size, ZMQ_SNDMORE);
+            zmq_send (socket, data, received, ZMQ_SNDMORE);
+        } while (received == data_size);
+        zmq_send (socket, id, id_size, ZMQ_SNDMORE);
+        zmq_send (socket, 0, 0, 0); //close socket
+    }
+
     return 0;
 }
