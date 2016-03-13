@@ -99,10 +99,64 @@ ENDIF (CZMQ_FOUND)
 # includes
 ########################################################################
 set (ec_headers
+    include/ec_library.h
+    include/stream-echo.h
+    src/echosrv.h
 )
 
 source_group ("Header Files" FILES ${ec_headers})
 install(FILES ${ec_headers} DESTINATION include)
+
+########################################################################
+# library
+########################################################################
+include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
+set (ec_sources
+    src/echosrv.c
+)
+source_group("Source Files" FILES ${ec_sources})
+if (NOT DEFINED BUILD_SHARED_LIBS)
+    SET(BUILD_SHARED_LIBS ON)
+endif()
+add_library(ec ${ec_sources})
+set_target_properties(ec
+    PROPERTIES DEFINE_SYMBOL "LIBEC_EXPORTS"
+)
+set_target_properties(ec
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+target_link_libraries(ec
+    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+)
+
+install(TARGETS ec
+    LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
+    ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
+    RUNTIME DESTINATION bin              # .dll file
+)
+
+########################################################################
+# pkgconfig
+########################################################################
+set (VERSION "0.1.0")
+set (prefix "${CMAKE_INSTALL_PREFIX}")
+set (exec_prefix "\${prefix}")
+set (libdir "\${prefix}/lib${LIB_SUFFIX}")
+set (includedir "\${prefix}/include")
+IF (ENABLE_DRAFTS)
+    set (pkg_config_defines "-DEC_BUILD_DRAFT_API=1")
+ELSE (ENABLE_DRAFTS)
+    set (pkg_config_defines "")
+ENDIF (ENABLE_DRAFTS)
+configure_file(
+    "${SOURCE_DIR}/src/libec.pc.in"
+    "${SOURCE_DIR}/src/libec.pc"
+@ONLY)
+
+install(
+    FILES "${SOURCE_DIR}/src/libec.pc"
+    DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
+)
 
 ########################################################################
 # executables
@@ -113,12 +167,43 @@ add_executable(
 )
 target_link_libraries(
     echoserver
+    ec
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     echoserver
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    echoactorserver
+    "${SOURCE_DIR}/src/echoactorserver.c"
+)
+target_link_libraries(
+    echoactorserver
+    ec
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+set_target_properties(
+    echoactorserver
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    ec_selftest
+    "${SOURCE_DIR}/src/ec_selftest.c"
+)
+target_link_libraries(
+    ec_selftest
+    ec
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+set_target_properties(
+    ec_selftest
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
 )
 
@@ -129,6 +214,7 @@ set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
+    echosrv
 )
 
 foreach(TEST_CLASS ${TEST_CLASSES})

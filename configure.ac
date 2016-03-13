@@ -335,6 +335,26 @@ AC_ARG_ENABLE([echoserver],
 AM_CONDITIONAL([ENABLE_ECHOSERVER], [test x$enable_echoserver != xno])
 AM_COND_IF([ENABLE_ECHOSERVER], [AC_MSG_NOTICE([ENABLE_ECHOSERVER defined])])
 
+# Check for echoactorserver intent
+AC_ARG_ENABLE([echoactorserver],
+    AS_HELP_STRING([--enable-echoactorserver],
+        [Compile and install 'echoactorserver' [default=yes]]),
+    [enable_echoactorserver=$enableval],
+    [enable_echoactorserver=yes])
+
+AM_CONDITIONAL([ENABLE_ECHOACTORSERVER], [test x$enable_echoactorserver != xno])
+AM_COND_IF([ENABLE_ECHOACTORSERVER], [AC_MSG_NOTICE([ENABLE_ECHOACTORSERVER defined])])
+
+# Check for ec_selftest intent
+AC_ARG_ENABLE([ec_selftest],
+    AS_HELP_STRING([--enable-ec_selftest],
+        [Compile 'ec_selftest' in src [default=yes]]),
+    [enable_ec_selftest=$enableval],
+    [enable_ec_selftest=yes])
+
+AM_CONDITIONAL([ENABLE_EC_SELFTEST], [test x$enable_ec_selftest != xno])
+AM_COND_IF([ENABLE_EC_SELFTEST], [AC_MSG_NOTICE([ENABLE_EC_SELFTEST defined])])
+
 # Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs)
@@ -375,7 +395,9 @@ fi
 
 # Specify output files
 AC_CONFIG_FILES([Makefile
-                ])
+                 doc/Makefile
+                 src/libec.pc
+                 ])
 
 AM_COND_IF([WITH_SYSTEMD_UNITS],
     [AC_CONFIG_FILES([

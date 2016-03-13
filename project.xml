@@ -7,5 +7,7 @@
     <include filename = "license.xml" />
     <use project = "libzmq" />
     <use project = "czmq" />
+    <actor name = "echosrv" private="1"/>
     <main name = "echoserver"/>
+    <main name = "echoactorserver" />
 </project>
