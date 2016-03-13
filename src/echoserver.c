@@ -74,9 +74,7 @@ int main (int argc, char *argv [])
     while(3) {
         id_size = zmq_recv (socket, id, id_size, 0);
         assert (id_size > 0);
-        zmq_send (socket, id, id_size, ZMQ_SNDMORE);
         char msg [256];
-        sprintf(msg, "hello %s I echo what you send\n", id);
         zmq_send (socket, msg, strlen(msg), ZMQ_SNDMORE);
         do {
             received = zmq_recv (socket, data, data_size, 0);
