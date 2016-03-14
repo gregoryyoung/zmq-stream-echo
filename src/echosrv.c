@@ -79,8 +79,8 @@ echosrv_destroy (echosrv_t **self_p)
     assert (self_p);
     if (*self_p) {
         echosrv_t *self = *self_p;
-        zsys_debug ("closing tcp server\n");
-        zmq_close (self->tcp_server); 
+        //zsys_debug ("closing tcp server\n");
+        //zmq_close (self->tcp_server); 
         zsys_debug ("destroying context\n");
         zctx_destroy (&self->z_ctx);
 
