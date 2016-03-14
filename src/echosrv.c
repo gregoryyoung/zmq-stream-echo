@@ -42,7 +42,7 @@ struct _echosrv_t {
     bool terminated;            //  Did caller ask us to quit?
     bool verbose;               //  Verbose logging enabled?
     zsock_t *tcp_server;        //  TCP socket server
-    zctx z_ctx;
+    zctx_t *z_ctx;
 };
 
 
@@ -60,12 +60,10 @@ echosrv_new (zsock_t *pipe, void *args)
      
 
     self->z_ctx = zctx_new();
-    self->tcp_server = zsocket_new (self->z_ctx, ZMQ_STREAM);
+    self->tcp_server = (zsock_t *) zsocket_new (self->z_ctx, ZMQ_STREAM);
     assert (self->tcp_server);
     //TODO add arguments on create    
 
-    int bound = zmq_bind (self->tcp_server, "tcp://*:1111");
-    assert (bound == 0);
 
     self->poller = zpoller_new (self->pipe, self->tcp_server, NULL);
     return self;
@@ -81,11 +79,14 @@ echosrv_destroy (echosrv_t **self_p)
     assert (self_p);
     if (*self_p) {
         echosrv_t *self = *self_p;
+        printf ("closing tcp server\n");
         zmq_close (self->tcp_server); 
-        zctx_destroy (self->z_ctx);
+        printf ("destroying context\n");
+        zctx_destroy (&self->z_ctx);
 
-        //  Free object itself
+        printf ("destroying poller\n");
         zpoller_destroy (&self->poller);
+        printf ("destroying self\n");
         free (self);
         *self_p = NULL;
     }
@@ -100,8 +101,10 @@ echosrv_start (echosrv_t *self)
 {
     assert (self);
 
-    //  TODO: Add startup actions
+    printf ("start called binding server\n");
 
+    int bound = zmq_bind (self->tcp_server, "tcp://*:1111");
+    assert (bound == 0);
     return 0;
 }
 
@@ -114,13 +117,32 @@ echosrv_stop (echosrv_t *self)
 {
     assert (self);
 
-    //  TODO: Add shutdown actions
+    printf ("stop called\n");
 
     return 0;
 }
 
 
-//  Here we handle incoming message from the node
+static void
+process_tcp (echosrv_t *self) 
+{
+    uint8_t id [256];
+    size_t id_size = 256;
+    uint8_t data [1024];
+    size_t data_size = 1024;
+    size_t received;
+
+    id_size = zmq_recv (self->tcp_server, id, id_size, 0);
+    assert (id_size > 0);
+    do {
+        received = zmq_recv (self->tcp_server, data, data_size, 0);
+        assert (received >= 0);
+        if(received >0) {
+            zmq_send (self->tcp_server, id, id_size, ZMQ_SNDMORE);
+            zmq_send (self->tcp_server, data, received, ZMQ_SNDMORE);
+        }
+    } while (received == data_size);
+}
 
 static void
 echosrv_recv_api (echosrv_t *self)
@@ -169,6 +191,8 @@ echosrv_actor (zsock_t *pipe, void *args)
         zsock_t *which = (zsock_t *) zpoller_wait (self->poller, 0);
         if (which == self->pipe)
             echosrv_recv_api (self);
+        if (which == self->tcp_server)
+            process_tcp (self);
        //  Add other sockets when you need them.
     }
     echosrv_destroy (&self);
