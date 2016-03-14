@@ -57,6 +57,14 @@ int main (int argc, char *argv [])
     }
     //  Insert main code here
     if (verbose)
-        zsys_info ("echoactorserver - ");
+       zsys_info ("echoactorserver - ");
+    echosrv_t *node = echosrv_new (iface, console);
+    echosrv_set_verbose (node, verbose);
+    echosrv_execute (node);
+    printf("Press enter to continue\n");
+    char enter = 0;
+    while (enter != '\r' && enter != '\n') { enter = getchar(); }
+    printf("Destroying actor\n");
+    echosrv_destroy (&node);
     return 0;
 }
