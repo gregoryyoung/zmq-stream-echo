@@ -41,7 +41,8 @@ struct _echosrv_t {
     zpoller_t *poller;          //  Socket poller
     bool terminated;            //  Did caller ask us to quit?
     bool verbose;               //  Verbose logging enabled?
-    //  TODO: Declare properties
+    zsock_t *tcp_server;        //  TCP socket server
+    zctx z_ctx;
 };
 
 
@@ -56,10 +57,17 @@ echosrv_new (zsock_t *pipe, void *args)
 
     self->pipe = pipe;
     self->terminated = false;
-    self->poller = zpoller_new (self->pipe, NULL);
+     
 
-    //  TODO: Initialize properties
+    self->z_ctx = zctx_new();
+    self->tcp_server = zsocket_new (self->z_ctx, ZMQ_STREAM);
+    assert (self->tcp_server);
+    //TODO add arguments on create    
 
+    int bound = zmq_bind (self->tcp_server, "tcp://*:1111");
+    assert (bound == 0);
+
+    self->poller = zpoller_new (self->pipe, self->tcp_server, NULL);
     return self;
 }
 
@@ -73,8 +81,8 @@ echosrv_destroy (echosrv_t **self_p)
     assert (self_p);
     if (*self_p) {
         echosrv_t *self = *self_p;
-
-        //  TODO: Free actor properties
+        zmq_close (self->tcp_server); 
+        zctx_destroy (self->z_ctx);
 
         //  Free object itself
         zpoller_destroy (&self->poller);
