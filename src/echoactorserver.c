@@ -60,13 +60,14 @@ int main (int argc, char *argv [])
        zsys_info ("echoactorserver - ");
     zactor_t *srv = zactor_new (echosrv_actor, NULL);
     assert (srv);
-    printf ("calling start\n");
+    zsys_debug ("calling start\n");
     zstr_sendx (srv, "START", "", NULL);
-    printf("Press enter to continue\n");
+    zsys_debug ("Press enter to continue\n");
     char enter = 0;
     while (enter != '\r' && enter != '\n') { enter = getchar(); }
-    printf ("stopping actorn");
-    printf ("Destroying actor\n");
+    zsys_debug ("stopping actor\n");
+    zstr_sendx (srv, "STOP", "", NULL);
+    zsys_debug ("Destroying actor\n");
     zactor_destroy (&srv);
     return 0;
 }

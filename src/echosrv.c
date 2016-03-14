@@ -79,14 +79,14 @@ echosrv_destroy (echosrv_t **self_p)
     assert (self_p);
     if (*self_p) {
         echosrv_t *self = *self_p;
-        printf ("closing tcp server\n");
+        zsys_debug ("closing tcp server\n");
         zmq_close (self->tcp_server); 
-        printf ("destroying context\n");
+        zsys_debug ("destroying context\n");
         zctx_destroy (&self->z_ctx);
 
-        printf ("destroying poller\n");
+        zsys_debug ("destroying poller\n");
         zpoller_destroy (&self->poller);
-        printf ("destroying self\n");
+        zsys_debug ("destroying self\n");
         free (self);
         *self_p = NULL;
     }
@@ -101,7 +101,7 @@ echosrv_start (echosrv_t *self)
 {
     assert (self);
 
-    printf ("start called binding server\n");
+    zsys_debug ("start called binding server\n");
 
     int bound = zmq_bind (self->tcp_server, "tcp://*:1111");
     assert (bound == 0);
@@ -117,7 +117,7 @@ echosrv_stop (echosrv_t *self)
 {
     assert (self);
 
-    printf ("stop called\n");
+    zsys_debug ("stop called\n");
 
     return 0;
 }
