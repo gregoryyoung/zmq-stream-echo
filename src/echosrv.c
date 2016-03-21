@@ -137,6 +137,11 @@ process_tcp (echosrv_t *self)
     do {
         received = zmq_recv (self->tcp_server, data, data_size, 0);
         assert (received >= 0);
+        char *rec = (char *) data;
+        if(rec[0] == 'e' && rec[1] == 'x' && rec[2] == 'i' && rec[3] == 't') {
+            zmq_send (self->tcp_server, id, id_size, ZMQ_SNDMORE);
+            zmq_send (self->tcp_server, data, 0, 0); 
+        }
         if(received >0) {
             zmq_send (self->tcp_server, id, id_size, ZMQ_SNDMORE);
             zmq_send (self->tcp_server, data, received, ZMQ_SNDMORE);
@@ -187,7 +192,7 @@ echosrv_actor (zsock_t *pipe, void *args)
     //  Signal actor successfully initiated
     zsock_signal (self->pipe, 0);
 
-    while (!self->terminated) {
+    while (!zctx_interrupted && !self->terminated) {
         zsock_t *which = (zsock_t *) zpoller_wait (self->poller, 0);
         if (which == self->pipe)
             echosrv_recv_api (self);
